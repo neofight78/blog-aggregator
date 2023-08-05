@@ -1,0 +1,4 @@
+.env
+/.idea
+/blog-aggregator
+/internal/database
