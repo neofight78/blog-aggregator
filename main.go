@@ -34,6 +34,8 @@ func main() {
 		Queries: database.New(db),
 	}
 
+	go fetchFeeds(apiConfig)
+
 	port := os.Getenv("PORT")
 
 	v1 := chi.NewRouter()
@@ -46,6 +48,7 @@ func main() {
 	v1.Post("/feed_follows", apiConfig.middlewareAuth(apiConfig.createFeedFollow))
 	v1.Delete("/feed_follows/{feedFollowID}", apiConfig.middlewareAuth(apiConfig.deleteFeedFollow))
 	v1.Get("/feed_follows", apiConfig.middlewareAuth(apiConfig.listFeedFollows))
+	v1.Get("/posts", apiConfig.middlewareAuth(apiConfig.listPosts))
 
 	router := chi.NewRouter()
 	router.Use(cors.Handler(cors.Options{

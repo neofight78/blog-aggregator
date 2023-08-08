@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -120,10 +121,10 @@ func (cfg *apiConfig) createFeed(w http.ResponseWriter, r *http.Request, user da
 	}
 
 	respondWithJSON(w, http.StatusOK, struct {
-		Feed       database.CreateFeedParams       `json:"feed"`
+		Feed       Feed                            `json:"feed"`
 		FeedFollow database.CreateFeedFollowParams `json:"feed_follow"`
 	}{
-		Feed:       feed,
+		Feed:       mapCreateFeedParam(feed),
 		FeedFollow: feedFollow,
 	})
 }
@@ -209,6 +210,27 @@ func (cfg *apiConfig) listFeedFollows(w http.ResponseWriter, r *http.Request, us
 		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-	
+
 	respondWithJSON(w, http.StatusOK, feedFollows)
+}
+
+func (cfg *apiConfig) listPosts(w http.ResponseWriter, r *http.Request, user database.User) {
+	limitAsString := r.URL.Query().Get("limit")
+
+	limit, err := strconv.Atoi(limitAsString)
+	if err != nil {
+		limit = 10
+	}
+
+	posts, err := cfg.Queries.GetPostsByUser(r.Context(), database.GetPostsByUserParams{
+		UserID: user.ID.String(),
+		Limit:  int32(limit),
+	})
+	if err != nil {
+		log.Printf("unable to list posts: %v\n", err)
+		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, posts)
 }
